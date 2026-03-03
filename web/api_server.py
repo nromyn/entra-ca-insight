@@ -1531,7 +1531,27 @@ def start_scan():
         'threads': data.get('threads', 10),
         'clear_cache': data.get('clear_cache')  # Can be None, 'all', 'policies', or 'tenant'
     }
-    
+
+
+    allowed_assignments = {'users', 'guests', 'workload-identities', 'agent-identities'}
+    allowed_target_resources = {'cloud-apps', 'user-actions', 'agent-resources'}
+
+    if config['assignments'] not in allowed_assignments:
+        return jsonify({
+            'error': (
+                f"Invalid value for 'assignments': '{config['assignments']}'. "
+                f"Allowed values: {sorted(allowed_assignments)}"
+            )
+        }), 400
+
+    if config['target_resources'] not in allowed_target_resources:
+        return jsonify({
+            'error': (
+                f"Invalid value for 'target_resources': '{config['target_resources']}'. "
+                f"Allowed values: {sorted(allowed_target_resources)}"
+            )
+        }), 400
+
     # Handle filter configuration
     filter_cfg = None
     if data.get('filter_config'):
