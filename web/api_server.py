@@ -4,14 +4,10 @@ Flask API server for CA Insight - serves analysis data via REST endpoints
 
 # Standard library imports
 import base64
-import contextlib
-import io
-import importlib
 import json
 import multiprocessing
 import os
 import shutil
-import signal
 import sqlite3
 import subprocess
 import sys
@@ -19,7 +15,6 @@ import time
 import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any
 
 # Third-party imports
 from flask import Flask, jsonify, request, send_from_directory, Response
@@ -48,6 +43,10 @@ active_scans = {}
 scan_logs = {}  # Store scan output logs in memory
 scan_processes = {}  # Track running processes by scan_id (instead of threads)
 
+
+# ============================================================================
+# DATABASE INITIALIZATION & MIGRATIONS
+# ============================================================================
 
 def init_db():
     """Initialize SQLite database for storing analysis results and scan management"""
@@ -218,6 +217,10 @@ def init_db():
     conn.commit()
     conn.close()
 
+
+# ============================================================================
+# DATA IMPORT
+# ============================================================================
 
 def import_json_to_db(json_file: str) -> int:
     """Import a JSON analysis report into the database.
@@ -495,7 +498,9 @@ def import_json_to_db(json_file: str) -> int:
     return run_id
 
 
-# API Routes
+# ============================================================================
+# STATIC FILE SERVING
+# ============================================================================
 
 @app.route('/')
 def index():
@@ -510,8 +515,26 @@ def index():
         shutil.copy(template_path, portal_path)
         print(f"Generated portal.html from template")
     
-    return send_from_directory('..', 'portal.html')
+    return send_from_directory(str(portal_path.parent), 'portal.html')
 
+
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    """Serve static asset files (images, favicons, etc.)"""
+    assets_dir = Path(__file__).parent.parent / 'assets'
+    return send_from_directory(str(assets_dir), filename)
+
+
+@app.route('/favicon.ico')
+def serve_favicon():
+    """Serve favicon.ico from root path (browsers request this automatically)"""
+    favicon_dir = Path(__file__).parent.parent / 'assets' / 'images' / 'favicon'
+    return send_from_directory(str(favicon_dir), 'favicon.ico')
+
+
+# ============================================================================
+# ANALYSIS RESULTS ENDPOINTS
+# ============================================================================
 
 @app.route('/api/runs', methods=['GET'])
 def get_runs():
@@ -906,6 +929,10 @@ def upload_analysis():
         return jsonify({'success': False, 'error': f'{type(e).__name__}: {str(e)}'}), 500
 
 
+# ============================================================================
+# AUTHENTICATION & TENANT ENDPOINTS
+# ============================================================================
+
 def get_tenant_primary_domain(token: str) -> str:
     """Get the primary domain name for a tenant from Microsoft Graph.
     
@@ -984,6 +1011,10 @@ def extract_tenant_id():
     except Exception as e:
         return jsonify({'tenant_id': None, 'error': f'Failed to decode token: {str(e)}'}), 400
 
+
+# ============================================================================
+# POLICY & STATISTICS ENDPOINTS
+# ============================================================================
 
 @app.route('/api/policies', methods=['POST'])
 def get_policies():
@@ -1835,6 +1866,10 @@ def delete_scan(scan_id):
 # END SCAN MANAGEMENT ENDPOINTS
 # ============================================================================
 
+
+# ============================================================================
+# APPLICATION ENTRY POINT
+# ============================================================================
 
 def main():
     """Main entry point for the API server"""
