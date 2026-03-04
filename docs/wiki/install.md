@@ -13,6 +13,7 @@ This page summarizes the **installation** of CA Insight.
 | `Group.Read.All` | Read group memberships |
 | `Policy.Read.All` | Read Conditional Access policies |
 | `PrivilegedAccess.Read.AzureAD` | Read PIM eligible role assignments (optional) |
+| `PrivilegedEligibilitySchedule.Read.AzureADGroup` | Read PIM eligible group assignments (optional) |
 | `RoleManagement.Read.All` | Read active role assignments |
 | `User.Read.All` | Read user identities and profiles |
 
