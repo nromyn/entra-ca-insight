@@ -596,9 +596,7 @@ def run_analysis(token: str, config: Dict, progress_callback=None, source: str =
         elif assignments == 'agent-identities':
             universally_covered = detector.detect_universal_coverage_for_agents(
                 flattened_policies,
-                target_resource=config.get('target_resources'),
-                token=token,
-                api_client=api_client
+                target_resource=config.get('target_resources')
             )
             # Agent identities only support block control for now
             mfa_covered = set()
@@ -607,9 +605,7 @@ def run_analysis(token: str, config: Dict, progress_callback=None, source: str =
         else:  # workload-identities
             universally_covered = detector.detect_universal_coverage_for_workloads(
                 flattened_policies,
-                target_resource=config.get('target_resources'),
-                token=token,
-                api_client=api_client
+                target_resource=config.get('target_resources')
             )
             # Workload identities only support block control for now
             mfa_covered = set()
